@@ -14,6 +14,16 @@ struct runner
 	mutable std::shared_ptr<py::object> m_ptr;
 };
 
+struct deleter
+{
+    deleter(const runner &r):m_runner(r) {}
+    ~deleter()
+    {
+        m_runner.m_ptr.reset();
+    }
+    runner const &m_runner;
+};
+
 PYBIND11_PLUGIN(pb_tg) {
     std::cout << "Thread status: " << ::PyEval_ThreadsInitialized() << '\n';
     ::PyEval_InitThreads();
@@ -27,8 +37,8 @@ PYBIND11_PLUGIN(pb_tg) {
          runner r{std::make_shared<py::object>(o)};
          tg.run([r]() {
              gil_thread_ensurer gte;
+             deleter d{r};
              (*r.m_ptr)();
-             r.m_ptr.reset();
          });
     });
     tg_class.def("wait",[](tbb::task_group &tg) {
