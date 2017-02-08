@@ -3,6 +3,25 @@ def func(n):
     time.sleep(random.uniform(0,1))
     print("Processing item {}".format(n))
 
+def func2():
+    import time, random
+    time.sleep(random.uniform(0,1))
+    print("Done!")
+
+import pb_tg
+
+tg = pb_tg.task_group()
+for i in range(100):
+    tg.run(func2)
+tg.wait()
+
+# import bp_tg
+#
+# tg = bp_tg.task_group()
+# for i in range(100):
+#     tg.run(lambda : print(i))
+# tg.wait()
+
 import bp_parfor
 
 bp_parfor.parallel_for(0,100,func)
