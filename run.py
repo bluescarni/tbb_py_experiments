@@ -13,6 +13,9 @@ import pb_tg
 tg = pb_tg.task_group()
 for i in range(100):
     tg.run(func2)
+
+print("Waiting now!!!")
+
 tg.wait()
 
 # import bp_tg

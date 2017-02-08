@@ -1,7 +1,6 @@
 #include <Python.h>
 #include <iostream>
 #include <memory>
-#define __TBB_ALLOW_MUTABLE_FUNCTORS 1
 #include <tbb/task_group.h>
 
 #include <pybind11/pybind11.h>
@@ -9,6 +8,11 @@
 #include "utils.hpp"
 
 namespace py = pybind11;
+
+struct runner
+{
+	mutable std::shared_ptr<py::object> m_ptr;
+};
 
 PYBIND11_PLUGIN(pb_tg) {
     std::cout << "Thread status: " << ::PyEval_ThreadsInitialized() << '\n';
@@ -20,12 +24,11 @@ PYBIND11_PLUGIN(pb_tg) {
     py::class_<tbb::task_group> tg_class(m, "task_group");
     tg_class.def(py::init<>());
     tg_class.def("run",[](tbb::task_group &tg, py::object o) {
-        //auto ptr = std::make_shared<py::object>(o);
-         tg.run([/*ptr*/o]() mutable {
+         runner r{std::make_shared<py::object>(o)};
+         tg.run([r]() {
              gil_thread_ensurer gte;
-             o();
-             //(*ptr)();
-             //ptr.reset();
+             (*r.m_ptr)();
+             r.m_ptr.reset();
          });
     });
     tg_class.def("wait",[](tbb::task_group &tg) {
