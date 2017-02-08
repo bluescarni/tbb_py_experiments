@@ -11,6 +11,21 @@
 
 namespace py = boost::python;
 
+struct runner
+{
+	mutable std::shared_ptr<py::object> m_ptr;
+};
+
+struct deleter
+{
+    deleter(const runner &r):m_runner(r) {}
+    ~deleter()
+    {
+        m_runner.m_ptr.reset();
+    }
+    runner const &m_runner;
+};
+
 BOOST_PYTHON_MODULE(bp_tg) {
     std::cout << "Thread status: " << ::PyEval_ThreadsInitialized() << '\n';
     ::PyEval_InitThreads();
@@ -18,11 +33,15 @@ BOOST_PYTHON_MODULE(bp_tg) {
 
     py::class_<tbb::task_group, boost::shared_ptr<tbb::task_group>, boost::noncopyable> tg_class("task_group", "", py::init<>());
     tg_class.def("run",+[](tbb::task_group &tg, py::object o) {
-        auto ptr = std::make_shared<py::object>(o);
-         tg.run([ptr](){
+        runner r{std::make_shared<py::object>(o)};
+         tg.run([r](){
              gil_thread_ensurer gte;
-             (*ptr)();
+             deleter d{r};
+             (*r.m_ptr)();
          });
     });
-    tg_class.def("wait",&tbb::task_group::wait);
+    tg_class.def("wait",+[](tbb::task_group &tg) {
+        gil_releaser gr;
+        tg.wait();
+    });
 }
