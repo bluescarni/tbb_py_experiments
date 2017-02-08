@@ -12,34 +12,6 @@
 //namespace py = pybind11;
 namespace py = boost::python;
 
-// class scoped_gil_release
-// {
-//     public:
-//         scoped_gil_release()
-//         {
-//             m_thread_state = PyEval_SaveThread();
-//         }
-//         ~scoped_gil_release()
-//         {
-//             PyEval_RestoreThread(m_thread_state);
-//             m_thread_state = NULL;
-//         }
-//     private:
-//         PyThreadState *m_thread_state;
-// };
-
-struct gil_ensurer
-{
-    gil_ensurer()
-    {
-        m_state = ::PyGILState_Ensure();
-    }
-    ~gil_ensurer()
-    {
-        ::PyGILState_Release(m_state);
-    }
-    ::PyGILState_STATE m_state;
-};
 
 BOOST_PYTHON_MODULE(tbb_py) {
     ::PyEval_InitThreads();
