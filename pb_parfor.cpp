@@ -16,7 +16,7 @@ PYBIND11_PLUGIN(pb_parfor) {
     ::PyEval_InitThreads();
     std::cout << "Thread status after init: " << ::PyEval_ThreadsInitialized() << '\n';
 
-    py::module m("pb_parffor", "");
+    py::module m("pb_parfor", "");
 
     m.def("parallel_for", [](unsigned long long first, unsigned long long last, py::object Func) {
         if (first > last) {
